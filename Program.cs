@@ -1,189 +1,82 @@
-﻿
-using Patches;
+﻿using Patches;
 
+var board = SetupBoard.Game1();
 
-
-const int boardWidth = 6;
-const int boardHeight = 6;
-
-var pieces = new List<Piece>
+// Keep looping until we don't find a valid move
+var moved = true;
+while (moved)
 {
-    new Piece
+    moved = false;
+    
+    // Create a 2d array of the board, and mark on it any pieces we are 100% certain about.
+    var occupied = new int[board.Width, board.Height];
+    foreach (var piece in board.Pieces)
     {
-        Number = 1,
-        BottomRight = new Location { X = 0, Y = 0 },
-        Shape = Shape.WideRectangle,
-        Size = 2,
-        TopLeft = new Location { X = 0, Y = 0 }
-    },
-    
-    new Piece
-    {
-        Number = 2,
-        BottomRight = new Location { X = 5, Y = 0 },
-        Shape = Shape.Any,
-        Size = null,
-        TopLeft = new Location { X = 5, Y = 0 }
-    },
-    
-    new Piece
-    {
-        Number = 3,
-        BottomRight = new Location { X = 1, Y = 1 },
-        Shape = Shape.TallRectangle,
-        Size = 2,
-        TopLeft = new Location { X = 1, Y = 1 }
-    },
-    
-    new Piece
-    {
-        Number = 4,
-        BottomRight = new Location { X = 4, Y = 1 },
-        Shape = Shape.Square,
-        Size = null,
-        TopLeft = new Location { X = 4, Y = 1 }
-    },
-    
-    new Piece
-    {
-        Number = 5,
-        BottomRight = new Location { X = 2, Y = 2 },
-        Shape = Shape.TallRectangle,
-        Size = 2,
-        TopLeft = new Location { X = 2, Y = 2 }
-    },
-    
-    new Piece
-    {
-        Number = 6,
-        BottomRight = new Location { X = 3, Y = 2 },
-        Shape = Shape.TallRectangle,
-        Size = 2,
-        TopLeft = new Location { X = 3, Y = 2 }
-    },
-    
-    
-    new Piece
-    {
-        Number = 7,
-        BottomRight = new Location { X = 2, Y = 3 },
-        Shape = Shape.TallRectangle,
-        Size = 3,
-        TopLeft = new Location { X = 2, Y = 3 }
-    },
-    
-    new Piece
-    {
-        Number = 8,
-        BottomRight = new Location { X = 3, Y = 3 },
-        Shape = Shape.TallRectangle,
-        Size = 3,
-        TopLeft = new Location { X = 3, Y = 3 }
-    },
-    
-    new Piece
-    {
-        Number = 9,
-        BottomRight = new Location { X = 1, Y = 4 },
-        Shape = Shape.TallRectangle,
-        Size = null,
-        TopLeft = new Location { X = 1, Y = 4 }
-    },
-    
-    new Piece
-    {
-        Number = 10,
-        BottomRight = new Location { X = 4, Y = 4 },
-        Shape = Shape.TallRectangle,
-        Size = 3,
-        TopLeft = new Location { X =4, Y = 4 }
-    },
-    
-    new Piece
-    {
-        Number = 11,
-        BottomRight = new Location { X = 0, Y = 5 },
-        Shape = Shape.Any,
-        Size = null,
-        TopLeft = new Location { X = 0, Y = 5 }
-    },
-    
-    new Piece
-    {
-        Number = 12,
-        BottomRight = new Location { X = 5, Y = 5 },
-        Shape = Shape.TallRectangle,
-        Size = 3,
-        TopLeft = new Location { X =5, Y = 5 }
-    },
-    
-};
+        foreach (var (x, y) in piece.Iterate())
+            occupied[x, y] = piece.Number;
+    } 
 
-while (true)
-{
-    var occupied = new int[boardWidth, boardHeight];
-    foreach (var piece in pieces)
-    {
-        for (var x = piece.TopLeft.X; x <= piece.BottomRight.X; x++)
-        {
-            for (var y = piece.TopLeft.Y; y <= piece.BottomRight.Y; y++)
-            {
-                occupied[x, y] = piece.Number;
-            }
-        }
-    }
-
-    Solver.Display(boardWidth, boardHeight, occupied); 
+    // Display our marked up array to the console.
+    Solver.Display(occupied); 
     
-    // -1 means multiple,  0 means none,  +ve id of the only piece.
-    var conflicts = new int[boardWidth, boardHeight];
-    var moved = false;
+    /*
+     * Our solver uses two rules
+     * 1. If a cell can only be reached by a single piece,  then that piece should grow to cover that square.
+     * 2. If all possible growths of a piece include a given square,  then that piece should grow to cover that square.
+     *
+     * Note, we don't try and solve the board in the fewest moves,  we just try to make process on a single piece in each round.
+     */
     
-    foreach (var piece in pieces)
+    
+    // For Rule (1) we need track how many pieces could possibly grow into each cell.  We only need to track three conditions
+    // -1 - multiple pieces can grow into the cell
+    //  0 - no pieces can grow into the cell.  (This is bad news!)
+    // +ve - the id of the only piece which can grow into the cell.
+    var conflicts = new int[board.Width, board.Height];
+    
+    foreach (var piece in board.Pieces)
     {
-        // How can this piece grow?
-        var placements = Solver.PossiblePlacements(boardWidth, boardHeight, piece)
+        // For each piece,  we work out all the possible ways it can grow on the board...
+        var placements = Solver.PossiblePlacements(board.Width, board.Height, piece)
             .Where(placement => !Equals(placement.TopLeft, piece.TopLeft) || !Equals(placement.BottomRight, piece.BottomRight) )
-            .Where(placement => piece.Size is null || piece.Size == Solver.Size(placement.TopLeft, placement.BottomRight))
+            
+            // ... whilst ensuring any size 
+            .Where(placement => piece.Size is null || piece.Size == placement.Size())
+            
+            // and shape constraints are honoured.
             .Where(placement => Solver.PlacementShapeIs(placement.TopLeft, placement.BottomRight, piece.Shape))
-            .Where(placement => Solver.NotAlreadyOccupied(piece.Number, placement.TopLeft, placement.BottomRight, occupied))
+            
+            .Where(placement => Solver.NotAlreadyOccupied(piece.Number, placement, occupied))
             .ToList();
 
         if (placements.Count > 0)
         {
-            var commonLocation = Solver.FindCommonCell(boardWidth, boardHeight, placements, occupied);
+            // For Rule (2), do all the possibilities for this piece include the same common cell? 
+            var commonLocation = Solver.FindCommonCell(board, placements, occupied);
             if (commonLocation is not null)
             {
                 // All possible places for this cell,  include this location.
                 var growTopLeft = commonLocation.Value.X < piece.TopLeft.X || commonLocation.Value.Y < piece.TopLeft.Y;
                 if (growTopLeft)
-                    piece.TopLeft = new Location
-                    {
-                        X = Math.Min(piece.TopLeft.X, commonLocation.Value.X),
-                        Y = Math.Min(piece.TopLeft.Y, commonLocation.Value.Y)
-                    };
+                    piece.TopLeft = piece.TopLeft.GrowToTheTopLeft(commonLocation.Value);
                 else
-                    piece.BottomRight = new Location
-                    {
-                        X = Math.Max(piece.BottomRight.X, commonLocation.Value.X),
-                        Y = Math.Max(piece.BottomRight.Y, commonLocation.Value.Y)
-                    };
+                    piece.BottomRight = piece.BottomRight.GrowToTheBottomRight(commonLocation.Value);
 
+                // We only make a single move per round.
                 moved = true;
                 break;
             }
 
-            foreach (var (topLeft, bottomRight) in placements)
+            // There is not a common cell,  so instead we need to calculate all the places this piece could reach
+            // for Rule (1)
+            foreach (var placement in placements)
             {
-                for (var x = topLeft.X; x <= bottomRight.X; x++)
+                foreach (var (x,y) in placement.Iterate())
                 {
-                    for (var y = topLeft.Y; y <= bottomRight.Y; y++)
-                    {
-                        if (conflicts[x, y] == 0)
-                            conflicts[x, y] = piece.Number;
-                        else if (conflicts[x, y] > 0 && conflicts[x, y] != piece.Number)
-                            conflicts[x, y] = -1; // Multiple pieces can go here.
-                    }
+                    if (conflicts[x, y] == 0)
+                        conflicts[x, y] = piece.Number;  // The only piece so far to get to this cell
+                    else if (conflicts[x, y] > 0 && conflicts[x, y] != piece.Number)
+                        conflicts[x, y] = -1; // Multiple pieces can go here. 
                 }
             }
             
@@ -192,183 +85,24 @@ while (true)
 
     if (!moved)
     {
-        for (var x = 0; x < boardWidth; x++)
+        // If we have reached here, then it means Rule (2) has not been used.  So instead we need to check if there
+        // is a cell which can only be reached by a single piece growing.
+        foreach (var (x,y) in board.Iterate())
         {
-            for (var y = 0; y < boardHeight; y++)
+            if (conflicts[x, y] > 0)
             {
-                if (conflicts[x, y] > 0)
-                {
-                    // Only a single piece can go here.
-                    var piece = pieces.Single(p => p.Number == conflicts[x, y]);
-                    var growTopLeft = x < piece.TopLeft.X || y < piece.TopLeft.Y;
-                    if (growTopLeft)
-                        piece.TopLeft = new Location
-                        {
-                            X = Math.Min(piece.TopLeft.X, x),
-                            Y = Math.Min(piece.TopLeft.Y, y)
-                        };
-                    else
-                        piece.BottomRight = new Location
-                        {
-                            X = Math.Max(piece.BottomRight.X, x),
-                            Y = Math.Max(piece.BottomRight.Y, y)
-                        };
-                }
-            }
-        }
-    }
-
-    Console.ReadKey(true);
-}
-
-
-
-
-return;
-
-static class Solver
-{
-    public static Location? FindCommonCell(int width, int height,
-        List<(Location TopLeft, Location BottomRight)> placements,
-        int[,] occupied)
-    {
-        // Work out the overlaps
-        var counts = new int[width, height];
-        foreach (var (topLeft, bottomRight) in placements)
-        {
-            for (var x = topLeft.X; x <= bottomRight.X; x++)
-            {
-                for (var y = topLeft.Y; y <= bottomRight.Y; y++)
-                    counts[x, y] += 1;
-            }
-        }
-
-        for (var x = 0; x < width; x++)
-        {
-            for (var y = 0; y < height; y++)
-            {
-                if (occupied[x, y] == 0 && counts[x, y] == placements.Count)
-                {
-                    // This square is currently empty,  but all possible places of this piece will include it.
-                    return new Location
-                    {
-                        X = x,
-                        Y = y
-                    };
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static bool NotAlreadyOccupied(int pieceNumber, Location topLeft, Location bottomRight, int[,] occupied)
-    {
-        for (var x = topLeft.X; x <= bottomRight.X; x++)
-        {
-            for (var y = topLeft.Y; y <= bottomRight.Y; y++)
-            {
-                if (occupied[x, y] != 0 && occupied[x, y] != pieceNumber)
-                    return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static bool PlacementShapeIs(Location topLeft, Location bottomRight, Shape shape)
-    {
-        var width = (bottomRight.X - topLeft.X) + 1;
-        var height = (bottomRight.Y - topLeft.Y) + 1;
-
-        switch (shape)
-        {
-            case Shape.Any:
-                return true;
-            case Shape.Square:
-                return width == height;
-            case Shape.WideRectangle:
-                return width > height;
-            case Shape.TallRectangle:
-                return width < height;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(shape), shape, null);
-        }
-    }
-
-    public static int Size(Location topLeft, Location bottomRight)
-    {
-        var width = (bottomRight.X - topLeft.X) + 1;
-        var height = (bottomRight.Y - topLeft.Y) + 1;
-        return width * height;
-    }
-
-    public static IEnumerable<(Location TopLeft, Location BottomRight)> PossiblePlacements(int width, int height,
-        Piece piece)
-    {
-        for (var bottomRightX = piece.BottomRight.X; bottomRightX < width; bottomRightX++)
-        {
-            for (var bottomRightY = piece.BottomRight.Y; bottomRightY < height; bottomRightY++)
-            {
-                for (var topLeftX = piece.TopLeft.X; topLeftX >= 0; topLeftX--)
-                {
-                    for (var topLeftY = piece.TopLeft.Y; topLeftY >= 0; topLeftY--)
-                    {
-                        yield return (
-                            new Location { X = topLeftX, Y = topLeftY },
-                            new Location { X = bottomRightX, Y = bottomRightY });
-                    }
-                }
-            }
-        }
-    }
-
-    public static void Display(int boardWidth, int boardHeight, int[,] occupied)
-    {
-        Console.WriteLine();
-        Console.WriteLine();
-            
-        for (var y = 0; y < boardHeight; y++)
-        {
-            for (var x = 0; x < boardWidth; x++)
-            {
-                if (occupied[x, y] == 0)
-                    Console.Write('.');
+                // Only a single piece can go here.
+                var piece = board.Pieces.Single(p => p.Number == conflicts[x, y]);
+                var growTopLeft = x < piece.TopLeft.X || y < piece.TopLeft.Y;
+                if (growTopLeft)
+                    piece.TopLeft = piece.TopLeft.GrowToTheTopLeft(new Location { X = x, Y = y});
                 else
-                    Console.Write((char)('A' + (occupied[x, y] - 1)));
+                    piece.BottomRight = piece.BottomRight.GrowToTheBottomRight(new Location { X = x, Y = y});
+                
+                // We only make a single move per round.
+                moved = true;
+                break;
             }
-
-            Console.WriteLine();
         }
     }
 }
-
-namespace Patches
-{
-    internal struct Location
-    {
-        public required int X { get; set; }
-        public required int Y { get; set; }
-        
-        
-    }
-
-    internal enum Shape
-    {
-        Any,
-        Square,
-        TallRectangle,
-        WideRectangle
-    }
-
-    internal record Piece
-    {
-        public required int Number { get; set; }
-        public required Location TopLeft { get; set; }
-        public required Location BottomRight { get; set; }
-        public required int? Size { get; set; }
-        public required Shape Shape { get; set; }
-    }
-}
-
-
