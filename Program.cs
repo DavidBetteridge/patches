@@ -135,6 +135,10 @@ while (true)
 
     Solver.Display(boardWidth, boardHeight, occupied); 
     
+    // -1 means multiple,  0 means none,  +ve id of the only piece.
+    var conflicts = new int[boardWidth, boardHeight];
+    var moved = false;
+    
     foreach (var piece in pieces)
     {
         // How can this piece grow?
@@ -164,8 +168,52 @@ while (true)
                         X = Math.Max(piece.BottomRight.X, commonLocation.Value.X),
                         Y = Math.Max(piece.BottomRight.Y, commonLocation.Value.Y)
                     };
-                
+
+                moved = true;
                 break;
+            }
+
+            foreach (var (topLeft, bottomRight) in placements)
+            {
+                for (var x = topLeft.X; x <= bottomRight.X; x++)
+                {
+                    for (var y = topLeft.Y; y <= bottomRight.Y; y++)
+                    {
+                        if (conflicts[x, y] == 0)
+                            conflicts[x, y] = piece.Number;
+                        else if (conflicts[x, y] > 0 && conflicts[x, y] != piece.Number)
+                            conflicts[x, y] = -1; // Multiple pieces can go here.
+                    }
+                }
+            }
+            
+        }
+    }
+
+    if (!moved)
+    {
+        for (var x = 0; x < boardWidth; x++)
+        {
+            for (var y = 0; y < boardHeight; y++)
+            {
+                if (conflicts[x, y] > 0)
+                {
+                    // Only a single piece can go here.
+                    var piece = pieces.Single(p => p.Number == conflicts[x, y]);
+                    var growTopLeft = x < piece.TopLeft.X || y < piece.TopLeft.Y;
+                    if (growTopLeft)
+                        piece.TopLeft = new Location
+                        {
+                            X = Math.Min(piece.TopLeft.X, x),
+                            Y = Math.Min(piece.TopLeft.Y, y)
+                        };
+                    else
+                        piece.BottomRight = new Location
+                        {
+                            X = Math.Max(piece.BottomRight.X, x),
+                            Y = Math.Max(piece.BottomRight.Y, y)
+                        };
+                }
             }
         }
     }
