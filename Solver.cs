@@ -16,7 +16,7 @@ internal static class Solver
         {
             if (occupied[x, y] == 0 && counts[x, y] == placements.Count)
             {
-                // This square is currently empty,  but all possible places of this piece will include it.
+                // This square is currently empty,  but all possible growths of this piece will include it.
                 yield return new Location
                 {
                     X = x,

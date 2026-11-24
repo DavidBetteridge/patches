@@ -58,8 +58,7 @@ while (moved)
                 moved = true;
             }
 
-            // There is not a common cell,  so instead we need to calculate all the places this piece could reach
-            // for Rule (1)
+            // We need to calculate all the places this piece could reach for Rule (1)
             foreach (var placement in placements)
             {
                 foreach (var (x,y) in placement.Iterate())
