@@ -1,6 +1,6 @@
 namespace Patches;
 
-internal enum Shape
+internal enum Shape : ushort
 {
     Any,
     Square,

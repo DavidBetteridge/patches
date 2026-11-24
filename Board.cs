@@ -1,16 +1,16 @@
 namespace Patches;
 
-internal class Board(int boardWidth, int boardHeight, List<Piece> pieces)
+internal class Board(uint boardWidth, uint boardHeight, List<Piece> pieces)
 {
-    public int Width { get; } = boardWidth;
-    public int Height { get; } = boardHeight;
+    public uint Width { get; } = boardWidth;
+    public uint Height { get; } = boardHeight;
     public List<Piece> Pieces { get; } = pieces;
     
-    public IEnumerable<(int x, int y)> Iterate()
+    public IEnumerable<(uint x, uint y)> Iterate()
     {
-        for (var x = 0; x < Width; x++)
+        for (uint x = 0; x < Width; x++)
         {
-            for (var y = 0; y < Height; y++)
+            for (uint y = 0; y < Height; y++)
             {
                 yield return (x, y);
             }

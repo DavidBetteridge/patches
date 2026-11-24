@@ -1,5 +1,5 @@
 ﻿using Patches;
-
+    
 var board = SetupBoard.Game1();
 
 // Keep looping until we don't find a valid move
@@ -9,7 +9,7 @@ while (moved)
     moved = false;
     
     // Create a 2d array of the board, and mark on it any pieces we are 100% certain about.
-    var occupied = new int[board.Width, board.Height];
+    var occupied = new uint[board.Width, board.Height];
     foreach (var piece in board.Pieces)
     {
         foreach (var (x, y) in piece.Iterate())
@@ -56,15 +56,8 @@ while (moved)
             if (commonLocation is not null)
             {
                 // All possible places for this cell,  include this location.
-                var growTopLeft = commonLocation.Value.X < piece.TopLeft.X || commonLocation.Value.Y < piece.TopLeft.Y;
-                if (growTopLeft)
-                    piece.TopLeft = piece.TopLeft.GrowToTheTopLeft(commonLocation.Value);
-                else
-                    piece.BottomRight = piece.BottomRight.GrowToTheBottomRight(commonLocation.Value);
-
-                // We only make a single move per round.
+                piece.GrowToInclude(commonLocation.Value);
                 moved = true;
-                break;
             }
 
             // There is not a common cell,  so instead we need to calculate all the places this piece could reach
@@ -74,7 +67,7 @@ while (moved)
                 foreach (var (x,y) in placement.Iterate())
                 {
                     if (conflicts[x, y] == 0)
-                        conflicts[x, y] = piece.Number;  // The only piece so far to get to this cell
+                        conflicts[x, y] = (int)piece.Number;  // The only piece so far to get to this cell
                     else if (conflicts[x, y] > 0 && conflicts[x, y] != piece.Number)
                         conflicts[x, y] = -1; // Multiple pieces can go here. 
                 }
@@ -83,26 +76,16 @@ while (moved)
         }
     }
 
-    if (!moved)
+    // Rule (1) we need to check if there is a cell which can only be reached by a single piece growing.
+    foreach (var (x,y) in board.Iterate())
     {
-        // If we have reached here, then it means Rule (2) has not been used.  So instead we need to check if there
-        // is a cell which can only be reached by a single piece growing.
-        foreach (var (x,y) in board.Iterate())
+        if (conflicts[x, y] > 0)
         {
-            if (conflicts[x, y] > 0)
-            {
-                // Only a single piece can go here.
-                var piece = board.Pieces.Single(p => p.Number == conflicts[x, y]);
-                var growTopLeft = x < piece.TopLeft.X || y < piece.TopLeft.Y;
-                if (growTopLeft)
-                    piece.TopLeft = piece.TopLeft.GrowToTheTopLeft(new Location { X = x, Y = y});
-                else
-                    piece.BottomRight = piece.BottomRight.GrowToTheBottomRight(new Location { X = x, Y = y});
-                
-                // We only make a single move per round.
-                moved = true;
-                break;
-            }
+            // Only a single piece can go here.
+            var piece = board.Pieces.Single(p => p.Number == conflicts[x, y]);
+            piece.GrowToInclude(new Location { X = x, Y = y});
+            
+            moved = true;
         }
     }
 }

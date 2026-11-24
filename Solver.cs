@@ -2,7 +2,7 @@ namespace Patches;
 
 internal static class Solver
 {
-    public static Location? FindCommonCell(Board board, List<PossiblePlacement> placements, int[,] occupied)
+    public static Location? FindCommonCell(Board board, List<PossiblePlacement> placements, uint[,] occupied)
     {
         // Work out the overlaps
         var counts = new int[board.Width, board.Height];
@@ -28,7 +28,7 @@ internal static class Solver
         return null;
     }
 
-    public static bool NotAlreadyOccupied(int pieceNumber, PossiblePlacement placement, int[,] occupied)
+    public static bool NotAlreadyOccupied(uint pieceNumber, PossiblePlacement placement, uint[,] occupied)
     {
         foreach (var (x, y) in placement.Iterate())
         {
@@ -59,19 +59,19 @@ internal static class Solver
         }
     }
 
-    public static IEnumerable<PossiblePlacement> PossiblePlacements(int width, int height,
+    public static IEnumerable<PossiblePlacement> PossiblePlacements(uint width, uint height,
         Piece piece)
     {
         for (var bottomRightX = piece.BottomRight.X; bottomRightX < width; bottomRightX++)
         {
             for (var bottomRightY = piece.BottomRight.Y; bottomRightY < height; bottomRightY++)
             {
-                for (var topLeftX = piece.TopLeft.X; topLeftX >= 0; topLeftX--)
+                for (var topLeftX = (int)piece.TopLeft.X; topLeftX >= 0; topLeftX--)
                 {
-                    for (var topLeftY = piece.TopLeft.Y; topLeftY >= 0; topLeftY--)
+                    for (var topLeftY = (int)piece.TopLeft.Y; topLeftY >= 0; topLeftY--)
                     {
                         yield return new PossiblePlacement {
-                            TopLeft = new Location { X = topLeftX, Y = topLeftY },
+                            TopLeft = new Location { X = (uint)topLeftX, Y = (uint)topLeftY },
                             BottomRight = new Location { X = bottomRightX, Y = bottomRightY } 
                             };
                     }
@@ -80,7 +80,7 @@ internal static class Solver
         }
     }
 
-    public static void Display(int[,] occupied)
+    public static void Display(uint[,] occupied)
     {
         var boardWidth = occupied.GetUpperBound(0)+1;
         var boardHeight = occupied.GetUpperBound(1)+1;

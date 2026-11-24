@@ -2,8 +2,8 @@ namespace Patches;
 
 internal readonly struct Location
 {
-    public required int X { get; init; }
-    public required int Y { get; init; }
+    public required uint X { get; init; }
+    public required uint Y { get; init; }
 
     public Location GrowToTheTopLeft(Location mustInclude)
     {
