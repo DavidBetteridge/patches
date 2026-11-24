@@ -1,6 +1,6 @@
 ﻿using Patches;
     
-var board = SetupBoard.Game1();
+var board = SetupBoard.Game2();
 
 // Keep looping until we don't find a valid move
 var moved = true;
