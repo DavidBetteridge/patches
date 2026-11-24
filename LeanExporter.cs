@@ -6,6 +6,7 @@ internal static class LeanExporter
         IEnumerable<Step> steps)
     {
         using var writer = new StreamWriter(fileName);
+        writer.WriteLine($"-- lake build && lake env lean {Path.GetFileName(fileName)}");
         writer.WriteLine("import Patches");
         writer.WriteLine();
         writer.WriteLine("open Patches");

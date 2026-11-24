@@ -65,10 +65,7 @@ internal class Tracker
 
     public void OutputToLeanFile(string fileName)
     {
-        const string leanDirectory = "Lean";
-        Directory.CreateDirectory(leanDirectory);
-        var outputPath = Path.Combine(leanDirectory, Path.GetFileName(fileName));
-        LeanExporter.Write(outputPath, _board.Width, _board.Height, _setups, _steps);
+        LeanExporter.Write(fileName, _board.Width, _board.Height, _setups, _steps);
     }
 }
 

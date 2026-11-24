@@ -1,7 +1,8 @@
 namespace Patches;
 
-internal class Board(uint boardWidth, uint boardHeight, List<Piece> pieces)
+internal class Board(string name, uint boardWidth, uint boardHeight, List<Piece> pieces)
 {
+    public string Name { get; } = name;
     public uint Width { get; } = boardWidth;
     public uint Height { get; } = boardHeight;
     public List<Piece> Pieces { get; } = pieces;

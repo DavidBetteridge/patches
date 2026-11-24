@@ -117,7 +117,7 @@ internal static class SetupBoard
             
         };
         
-        return new Board(6, 6, pieces);
+        return new Board("Game1", 6, 6, pieces);
     }
     
         public static Board Game2()
@@ -204,7 +204,7 @@ internal static class SetupBoard
             
         };
         
-        return new Board(6, 6, pieces);
+        return new Board("Game2", 6, 6, pieces);
     }
     
 }
