@@ -37,25 +37,28 @@ internal class Tracker
 
     public void FinishWatching()
     {
-        if (!Equals(_topLeft, _piece!.TopLeft))
+        var piece = _piece ?? throw new InvalidOperationException("No piece is being tracked.");
+        var ruleName = _ruleName ?? throw new InvalidOperationException("No rule is being tracked.");
+
+        if (!Equals(_topLeft, piece.TopLeft))
         {
             _steps.Add(new Step
             {
-                RuleName = _ruleName,
-                PieceNumber = _piece.Number,
-                X = _piece.TopLeft.X,
-                Y = _piece.TopLeft.Y,
+                RuleName = ruleName,
+                PieceNumber = piece.Number,
+                X = piece.TopLeft.X,
+                Y = piece.TopLeft.Y,
             });
         }
-        
-        if (!Equals(_bottomRight, _piece!.BottomRight))
+
+        if (!Equals(_bottomRight, piece.BottomRight))
         {
             _steps.Add(new Step
             {
-                RuleName = _ruleName,
-                PieceNumber = _piece.Number,
-                X = _piece.BottomRight.X,
-                Y = _piece.BottomRight.Y,
+                RuleName = ruleName,
+                PieceNumber = piece.Number,
+                X = piece.BottomRight.X,
+                Y = piece.BottomRight.Y,
             });
         }
     }
@@ -73,6 +76,13 @@ internal class Tracker
         {
             Console.WriteLine($"Apply{step.RuleName} PieceNumber:={step.PieceNumber} X:={step.X} Y:={step.Y}");
         }
+
+        OutputToLeanFile("Solution.lean");
+    }
+
+    private void OutputToLeanFile(string fileName)
+    {
+        LeanExporter.Write(fileName, _board.Width, _board.Height, _setups, _steps);
     }
 }
 
@@ -87,7 +97,7 @@ internal record Setup
 
 internal record Step
 {
-    public required string? RuleName { get; init; }
+    public required string RuleName { get; init; }
     public required uint PieceNumber { get; init; }
     public required uint X { get; init; }
     public required uint Y { get; init; }

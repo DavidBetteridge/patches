@@ -16,3 +16,13 @@ This program solves the puzzle by applying this two rules
 1. If a cell can only be reached by a single piece,  then that piece should grow to cover that square.
 
 2. If all possible growths of a piece include a given square,  then that piece should grow to cover that square.
+
+## Lean 4 proof
+
+Running the solver writes `Solution.lean` alongside the existing console output. The file imports `Patches.lean`, proves that the initial board is well-formed, checks every recorded rule application against the board state at that point, and proves that the final pieces cover the board without overlap and satisfy their shape and size constraints.
+
+Check the generated proof from the project directory with:
+
+```sh
+lake build && lake env lean Solution.lean
+```
