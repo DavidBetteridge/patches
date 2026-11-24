@@ -1,6 +1,9 @@
 ﻿using Patches;
     
-var board = SetupBoard.Game2();
+
+var board = SetupBoard.Game1();
+
+var tracker = new Tracker(board);
 
 // Keep looping until we don't find a valid move
 var moved = true;
@@ -51,12 +54,14 @@ while (moved)
         {
             // For Rule (2), do all the possibilities for this piece include the same common cell? 
             var commonLocations = Solver.FindCommonCells(board, placements, occupied);
+            tracker.StartWatching("Rule2", piece);
             foreach (var commonLocation in commonLocations)
             {
                 // All possible places for this cell,  include this location.
                 piece.GrowToInclude(commonLocation);
                 moved = true;
             }
+            tracker.FinishWatching();
 
             // We need to calculate all the places this piece could reach for Rule (1)
             foreach (var placement in placements)
@@ -80,9 +85,14 @@ while (moved)
         {
             // Only a single piece can go here.
             var piece = board.Pieces.Single(p => p.Number == conflicts[x, y]);
+            tracker.StartWatching("Rule1", piece);
             piece.GrowToInclude(new Location { X = x, Y = y});
+            tracker.FinishWatching();
             
             moved = true;
         }
     }
 }
+
+
+tracker.OutputToConsole();
