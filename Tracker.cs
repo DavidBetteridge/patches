@@ -63,26 +63,12 @@ internal class Tracker
         }
     }
 
-    public void OutputToConsole()
+    public void OutputToLeanFile(string fileName)
     {
-        Console.WriteLine($"DefineBoard Width:={_board.Width} Height:={_board.Height}");
-        
-        foreach (var piece in _setups)
-        {
-            Console.WriteLine($"AddPiece PieceNumber:={piece.PieceNumber} X:={piece.X} Y:={piece.Y} Shape:={piece.Shape.ToString()} Size:={piece.Size.ToString()}");
-        }
-        
-        foreach (var step in _steps)
-        {
-            Console.WriteLine($"Apply{step.RuleName} PieceNumber:={step.PieceNumber} X:={step.X} Y:={step.Y}");
-        }
-
-        OutputToLeanFile("Solution.lean");
-    }
-
-    private void OutputToLeanFile(string fileName)
-    {
-        LeanExporter.Write(fileName, _board.Width, _board.Height, _setups, _steps);
+        const string leanDirectory = "Lean";
+        Directory.CreateDirectory(leanDirectory);
+        var outputPath = Path.Combine(leanDirectory, Path.GetFileName(fileName));
+        LeanExporter.Write(outputPath, _board.Width, _board.Height, _setups, _steps);
     }
 }
 

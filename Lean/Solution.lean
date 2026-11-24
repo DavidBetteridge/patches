@@ -20,7 +20,7 @@ def board0 : Board :=
 
 theorem initialBoardIsValid : initialBoardValid board0 = true := by decide
 
-theorem move1IsValid : Rule1Valid board0 1 1 0 = true := by decide
+theorem move1IsValid : Rule2Valid board0 1 1 0 = true := by decide
 def board1 : Board := applyMove board0 1 1 0
 
 theorem move2IsValid : Rule2Valid board1 3 1 2 = true := by decide

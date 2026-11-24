@@ -95,4 +95,4 @@ while (moved)
 }
 
 
-tracker.OutputToConsole();
+tracker.OutputToLeanFile("/Users/davidbetteridge/Patches/Lean/Solution.lean");

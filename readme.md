@@ -19,10 +19,10 @@ This program solves the puzzle by applying this two rules
 
 ## Lean 4 proof
 
-Running the solver writes `Solution.lean` alongside the existing console output. The file imports `Patches.lean`, proves that the initial board is well-formed, checks every recorded rule application against the board state at that point, and proves that the final pieces cover the board without overlap and satisfy their shape and size constraints.
+Running the solver writes `Lean/Solution.lean`. The file imports `Patches.lean`, proves that the initial board is well-formed, checks every recorded rule application against the board state at that point, and proves that the final pieces cover the board without overlap and satisfy their shape and size constraints.
 
-Check the generated proof from the project directory with:
+Check the generated proof from the project root with:
 
 ```sh
-lake build && lake env lean Solution.lean
+cd Lean && lake build && lake env lean Solution.lean
 ```
