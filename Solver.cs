@@ -2,7 +2,7 @@ namespace Patches;
 
 internal static class Solver
 {
-    public static Location? FindCommonCell(Board board, List<PossiblePlacement> placements, uint[,] occupied)
+    public static IEnumerable<Location> FindCommonCells(Board board, List<PossiblePlacement> placements, uint[,] occupied)
     {
         // Work out the overlaps
         var counts = new int[board.Width, board.Height];
@@ -17,15 +17,13 @@ internal static class Solver
             if (occupied[x, y] == 0 && counts[x, y] == placements.Count)
             {
                 // This square is currently empty,  but all possible places of this piece will include it.
-                return new Location
+                yield return new Location
                 {
                     X = x,
                     Y = y
                 };
             }
         }
-
-        return null;
     }
 
     public static bool NotAlreadyOccupied(uint pieceNumber, PossiblePlacement placement, uint[,] occupied)
@@ -39,10 +37,10 @@ internal static class Solver
         return true;
     }
 
-    public static bool PlacementShapeIs(Location topLeft, Location bottomRight, Shape shape)
+    public static bool PlacementShapeIs(PossiblePlacement placement, Shape shape)
     {
-        var width = (bottomRight.X - topLeft.X) + 1;
-        var height = (bottomRight.Y - topLeft.Y) + 1;
+        var width = (placement.BottomRight.X - placement.TopLeft.X) + 1;
+        var height = (placement.BottomRight.Y - placement.TopLeft.Y) + 1;
 
         switch (shape)
         {

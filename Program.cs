@@ -23,8 +23,6 @@ while (moved)
      * Our solver uses two rules
      * 1. If a cell can only be reached by a single piece,  then that piece should grow to cover that square.
      * 2. If all possible growths of a piece include a given square,  then that piece should grow to cover that square.
-     *
-     * Note, we don't try and solve the board in the fewest moves,  we just try to make process on a single piece in each round.
      */
     
     
@@ -44,7 +42,7 @@ while (moved)
             .Where(placement => piece.Size is null || piece.Size == placement.Size())
             
             // and shape constraints are honoured.
-            .Where(placement => Solver.PlacementShapeIs(placement.TopLeft, placement.BottomRight, piece.Shape))
+            .Where(placement => Solver.PlacementShapeIs(placement, piece.Shape))
             
             .Where(placement => Solver.NotAlreadyOccupied(piece.Number, placement, occupied))
             .ToList();
@@ -52,11 +50,11 @@ while (moved)
         if (placements.Count > 0)
         {
             // For Rule (2), do all the possibilities for this piece include the same common cell? 
-            var commonLocation = Solver.FindCommonCell(board, placements, occupied);
-            if (commonLocation is not null)
+            var commonLocations = Solver.FindCommonCells(board, placements, occupied);
+            foreach (var commonLocation in commonLocations)
             {
                 // All possible places for this cell,  include this location.
-                piece.GrowToInclude(commonLocation.Value);
+                piece.GrowToInclude(commonLocation);
                 moved = true;
             }
 
